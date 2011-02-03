@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Editor
+Bundle-SymbolicName: org.opensixen.acct.editor
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.opensixen.acct.editor.Activator
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.compiere.apps.form,
+ org.osgi.framework;version="1.3.0"
+Require-Bundle: org.opensixen.client;bundle-version="1.0.0",
+ org.opensixen.base;bundle-version="1.0.0",
+ org.opensixen.core.client;bundle-version="1.0.0"
