@@ -73,6 +73,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.table.DefaultTableModel;
 
+import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
@@ -83,8 +84,11 @@ import org.compiere.swing.CPanel;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.opensixen.acct.grid.AccountCellEditor;
+import org.opensixen.acct.grid.AccountString;
 import org.opensixen.acct.grid.ElementsTable;
 import org.opensixen.acct.grid.TableAccount;
+import org.opensixen.acct.process.CreateJournal;
 import org.opensixen.acct.utils.AcctEditorMouseAdapter;
 
 /**
@@ -175,7 +179,7 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		ColumnInfo[] s_layoutJournal = new ColumnInfo[]{
 				new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID), I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID, IDColumn.class, false, true, null),
          		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Value), MElementValue.COLUMNNAME_Value, String.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_Description),  "v."+I_C_ValidCombination.COLUMNNAME_Description, String.class, false, true, null)};
+        		new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_BPartner_ID),  "v."+I_C_ValidCombination.COLUMNNAME_C_BPartner_ID, VLookup.class, false, true, null)};
 
 
 		elementstab.setModel(new DefaultTableModel());
@@ -218,9 +222,10 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 	private void setSelectedValues(int row){
 		TableAccount act =principalPanel.getPanelJournal().getJournalTable();
 		int prow=act.getSelectedRow();
-
+		IDColumn c =(IDColumn) elementstab.getValueAt(row, ElementsTable.COLUMN_ID);
 		act.setValueAt(elementstab.getValueAt(row, ElementsTable.COLUMN_VALUE), prow, TableAccount.COLUMN_Value);
 		act.setValueAt(elementstab.getValueAt(row, ElementsTable.COLUMN_DESCRIPTION), prow, TableAccount.COLUMN_Name);
+		act.setValueAt(c.getRecord_ID(), prow, TableAccount.COLUMN_ValidCombination);
 
 	}
 
@@ -230,6 +235,7 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 			 //Detectamos doble click
 			 if (e.getClickCount() == 2) {
 	            setSelectedValues(elementstab.getSelectedRow());
+	            
 	         }
 	      }    
 		
@@ -240,8 +246,13 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(newjournal)){
 			//Nuevo asiento
+			//Reseteamos el panel y ponemos el número inicial de filas
+			principalPanel.getPanelJournal().preparetable();
+			principalPanel.getPanelJournal().getJournalTable().setRowCount(10);
 		}else if(arg0.getSource().equals(savejournal)){
+			System.out.println("En saveJournal");
 			//Guardar asiento actual
+			CreateJournal journal = new CreateJournal(principalPanel.getPanelJournal().getJournalTable()); 
 		}else if(arg0.getSource().equals(saveasdefault)){
 			//Guardar como asiento predefinido
 		}

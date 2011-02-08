@@ -79,6 +79,7 @@ import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
 import org.compiere.model.MElementValue;
 import org.compiere.model.MFactAcct;
+import org.compiere.model.X_C_ValidCombination;
 import org.compiere.model.X_Fact_Acct;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
@@ -161,17 +162,18 @@ public class AcctEditorJournal extends JPanel{
 	}
 
 
-	private void preparetable() {
+	protected void preparetable() {
 		
 		ColumnInfo[] s_layoutJournal = new ColumnInfo[]{
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_JournalNo), MFactAcct.COLUMNNAME_JournalNo, String.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_DateAcct), MFactAcct.COLUMNNAME_DateAcct, Timestamp.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_JournalNo), MFactAcct.COLUMNNAME_JournalNo, String.class, true, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_DateTrx), MFactAcct.COLUMNNAME_DateAcct, Timestamp.class, true, true, null),
         		//Columna especial, crear clase nueva para ella con buscador de elementos de cuenta según vamos escribiendo
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Value), MElementValue.COLUMNNAME_Value, AccountString.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Name), MElementValue.COLUMNNAME_Name, String.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_Description), MFactAcct.COLUMNNAME_Description, String.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_Account_ID), MElementValue.COLUMNNAME_Value, AccountString.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Name), MElementValue.COLUMNNAME_Name, String.class, true, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "Concept"), MFactAcct.COLUMNNAME_Description, String.class, false, true, null),
         		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctDr), MFactAcct.COLUMNNAME_AmtAcctDr,BigDecimal.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctCr), MFactAcct.COLUMNNAME_AmtAcctCr,BigDecimal.class, false, true, null)};
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctCr), MFactAcct.COLUMNNAME_AmtAcctCr,BigDecimal.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), X_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID), X_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID,Integer.class, false, true, null)};
 
 		//Reseteamos el modelo de tabla
 		journaltab.setModel(new DefaultTableModel());

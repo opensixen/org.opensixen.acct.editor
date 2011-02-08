@@ -84,7 +84,6 @@ public class AccountString extends CTextField implements KeyListener, VEditor{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private static String value;
 
 	public AccountString(){
 		System.out.println("En constructor de AccountString");
@@ -134,5 +133,6 @@ public class AccountString extends CTextField implements KeyListener, VEditor{
 		// TODO Auto-generated method stub
 		
 	}
+
 
 }

@@ -71,6 +71,7 @@ import javax.swing.table.TableColumn;
 import org.compiere.grid.ed.VCellRenderer;
 import org.compiere.grid.ed.VHeaderRenderer;
 import org.compiere.minigrid.CheckRenderer;
+import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.IDColumnEditor;
 import org.compiere.minigrid.IDColumnRenderer;
@@ -104,31 +105,59 @@ public class TableAccount extends MiniTable implements IMiniTable {
 	public static int COLUMN_Description=4;
 	public static int COLUMN_AmtAcctDr=5;   
 	public static int COLUMN_AmtAcctCr=6;   
+	public static int COLUMN_ValidCombination=7;
 
 	public void setColumnClass (int index, Class c, boolean readOnly, String header)
 	{
 		super.setColumnClass(index,c,readOnly,header);
-	//	log.config( "MiniTable.setColumnClass - " + index, c.getName() + ", r/o=" + readOnly);
+
 		TableColumn tc = getColumnModel().getColumn(index);
 		if (tc == null)
 			return;
-		//  Set R/O
-		setColumnReadOnly(index, readOnly);
 
+		setColumnReadOnly(index, readOnly);
 		if (c == AccountString.class)
 		{
 			System.out.println("En accountString");
-			tc.setCellRenderer(new VCellRenderer(DisplayType.String));
-			/*if (readOnly)
-				tc.setCellEditor(new ROCellEditor());
-			else*/
-				tc.setCellEditor(new AccountCellEditor(AccountString.class));
-
-			
+			tc.setCellRenderer(new AccountCellRenderer(DisplayType.String));
+			tc.setCellEditor(new AccountCellEditor(AccountString.class));			
 			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.String));
+		}else if (c == Timestamp.class)
+		{
+			tc.setCellRenderer(new AccountCellRenderer(DisplayType.Date));
+		}else if (c == BigDecimal.class)
+		{
+			tc.setCellRenderer(new AccountCellRenderer(DisplayType.Amount));
+		}else if (c == Double.class)
+		{
+			tc.setCellRenderer(new AccountCellRenderer(DisplayType.Number));
+		}else if (c == Integer.class)
+		{
+			tc.setCellRenderer(new AccountCellRenderer(DisplayType.Integer));
+		}else{
+			tc.setCellRenderer(new AccountCellRenderer(DisplayType.String));
 		}
-		//  String
-
-	//	log.fine( "Renderer=" + tc.getCellRenderer().toString() + ", Editor=" + tc.getCellEditor().toString());
+		
+		if(index==COLUMN_ValidCombination){
+			//No mostramos la columna
+			tc.setPreferredWidth(0);
+			tc.setMaxWidth(0);
+			tc.setMinWidth(0);
+			tc.setResizable(false);
+		}
 	}   //  setColumnClass
+	
+	public AccountString getValueAccount(int row){
+		ColumnInfo[] info=this.getLayoutInfo();
+		AccountString acts=null;
+		
+		System.out.println("La clase de la columna="+this.getColumn(TableAccount.COLUMN_Value).getClass());
+		this.getValueAt(row, TableAccount.COLUMN_Value);
+		//Nos aseguramos que se la clase correcta
+		if(info[TableAccount.COLUMN_Value].getColClass().equals(AccountString.class)){
+			AccountCellEditor editor =(AccountCellEditor) this.getColumn(TableAccount.COLUMN_Value).getCellEditor();
+			acts =(AccountString)editor.getEditorAt(this, row, TableAccount.COLUMN_Value);
+		}
+		return acts;
+	}
 }

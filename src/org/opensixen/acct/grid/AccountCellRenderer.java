@@ -1,4 +1,4 @@
- /******* BEGIN LICENSE BLOCK *****
+/******* BEGIN LICENSE BLOCK *****
  * Versión: GPL 2.0/CDDL 1.0/EPL 1.0
  *
  * Los contenidos de este fichero están sujetos a la Licencia
@@ -65,55 +65,93 @@ import java.awt.Component;
 
 import javax.swing.JTable;
 
-import org.compiere.grid.ed.VEditor;
-import org.compiere.minigrid.MiniCellEditor;
+import org.adempiere.plaf.AdempierePLAF;
+import org.compiere.grid.ed.VCellRenderer;
+import org.compiere.model.GridField;
+import org.compiere.util.DisplayType;
 
 /**
  * 
- * AccountCellEditor 
+ * AccountCellRenderer 
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class AccountCellEditor extends MiniCellEditor{
+public class AccountCellRenderer extends VCellRenderer{
 
-	public AccountCellEditor(Class c) {
-		super(c);
-		if(c == AccountString.class){
-			m_editor = new AccountString();
-		}
+	public AccountCellRenderer(GridField mField) {
+		super(mField);
+		// TODO Auto-generated constructor stub
 	}
-	private VEditor m_editor = null;
-	
-	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
-	{
-		//	Set Value
-		super.getTableCellEditorComponent(table, value, isSelected, row, column);
-		m_editor.setValue(value);
-		
-		return (Component)m_editor;
-	}	//	getTableCellEditorComponent
 
-	
-	public Component getEditorAt(JTable table, int row, int column){
-		return getTableCellEditorComponent(table, null, false, row, column);
+
+	public AccountCellRenderer(int string) {
+		super(string);
 	}
-	
+
+
 	/**
-	 *	Returns the value contained in the editor
-	 *  @return value
+	 * 
 	 */
-	public Object getCellEditorValue()
-	{
+	private static final long serialVersionUID = 1L;
 
-		if (m_editor != null)
-			return m_editor.getValue();
-		return null;
-	}	//	getCellEditorValue
 	
-	
-	public VEditor getCellEditor(){
-		return m_editor;
+	public Component getTableCellRendererComponent(JTable table,Object value,boolean isSelected,boolean hasFocus,int row,int column)
+	{
+		Component c = null;
+			//	returns JLabel
+		c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			//c.setFont(AdempierePLAF.getFont_Field());
+		c.setFont(table.getFont());
+		
+
+		//  Background & Foreground
+		Color bg = AdempierePLAF.getFieldBackground_Mandatory();
+		Color fg = AdempierePLAF.getTextColor_Normal();
+		//  Inactive Background
+		boolean ro = !table.isCellEditable(row, column); 
+		if (ro)
+		{
+			bg = AdempierePLAF.getFieldBackground_Inactive();
+			if (isSelected && !hasFocus)
+				bg = bg.darker();
+		}
+		
+		//  Foreground
+		int cCode = 0;
+		//  Grid
+		if (table instanceof org.compiere.grid.VTable)
+			cCode = ((org.compiere.grid.VTable)table).getColorCode (row);
+		//  MiniGrid
+		else if (table instanceof org.compiere.minigrid.MiniTable)
+			cCode = ((org.compiere.minigrid.MiniTable)table).getColorCode (row);
+		//
+		if (cCode == 0)
+			;											//	Black
+		else if (cCode < 0)
+			fg = AdempierePLAF.getTextColor_Issue();		//	Red
+		else
+			fg = Color.green;		//	Blue
+		
+		//	Highlighted row
+		if (isSelected)
+		{
+		//	Windows is white on blue
+			bg = table.getGridColor();
+			fg = table.getSelectionForeground();
+			if (hasFocus)
+				bg = org.adempiere.apps.graph.GraphUtil.brighter(bg, .9);
+		}
+		
+		//  Set Color
+		c.setBackground(bg);
+		c.setForeground(fg);
+		//
+
+		//  Format it
+		setValue(value);
+		return c;
 	}
+
 }

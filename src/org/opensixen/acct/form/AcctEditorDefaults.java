@@ -63,18 +63,25 @@ package org.opensixen.acct.form;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VLookup;
+import org.compiere.grid.ed.VNumber;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
+import org.compiere.swing.CCheckBox;
 import org.compiere.swing.CLabel;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
@@ -88,7 +95,7 @@ import org.compiere.util.Msg;
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class AcctEditorDefaults extends JPanel implements VetoableChangeListener{
+public class AcctEditorDefaults extends JPanel implements VetoableChangeListener, ActionListener{
 
 	private static final long serialVersionUID = 1L;
 
@@ -104,41 +111,72 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	 * Descripción de swings
 	 */
 	
-
+	//Categoría Contable
+	private CLabel lglCategory = new CLabel();
+	private static VLookup vglCategory;
 	
 	//Esquema Contable
 	private CLabel lAcctSchema = new CLabel();
-	private VLookup vAcctSchema;
+	private static VLookup vAcctSchema;
 	
 	//Fecha Contable
 	private CLabel lDateAcct = new CLabel();
-	private VDate vDateAcct= new VDate();
+	private static VDate vDateAcct= new VDate();
 	
 	//Organización
 	private CLabel lOrg = new CLabel();
-	private VLookup vOrg;
+	private static VLookup vOrg;
 	
+	//Multimoneda
+	private static CCheckBox multicurrency;
+	
+	//Moneda
+	private CLabel lCurrency = new CLabel();
+	private static VLookup vCurrency;
+	
+	//Tipo de Conversión
+	private CLabel lConversionType = new CLabel();
+	private static VLookup vConversionType;
+	
+	//Tipo de Conversión
+	private CLabel lCurrencyRate = new CLabel();
+	private static VNumber vCurrencyRate;
 	
 	public AcctEditorDefaults(){
 		initComponents();
 	}
 	
 	public AcctEditorDefaults(AcctEditorFormPanel acctEditorFormPanel) {
-		// TODO Auto-generated constructor stub
+		initComponents();
 	}
 
 	private void initComponents(){
 		fillPicks();
 		this.setLayout(new GridBagLayout());
         //Columna,fila,?,?,withx,withy
+		this.add( lglCategory,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vglCategory,new GridBagConstraints( 1,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,10 ),0,0 ));
+		this.add( lDateAcct,new GridBagConstraints( 2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vDateAcct,new GridBagConstraints( 3,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,10 ),0,0 ));
+		this.add( lAcctSchema,new GridBagConstraints( 4,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vAcctSchema,new GridBagConstraints( 5,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,10 ),0,0 ));
+        this.add( lOrg,new GridBagConstraints( 6,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vOrg,new GridBagConstraints( 7,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+        this.add( multicurrency,new GridBagConstraints( 0,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( lCurrency,new GridBagConstraints( 2,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vCurrency,new GridBagConstraints( 3,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+        this.add( lConversionType,new GridBagConstraints( 4,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vConversionType,new GridBagConstraints( 5,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+        this.add( lCurrencyRate,new GridBagConstraints( 6,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+        this.add( vCurrencyRate,new GridBagConstraints( 7,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
 
-		this.add( lDateAcct,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-        this.add( vDateAcct,new GridBagConstraints( 1,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-		this.add( lAcctSchema,new GridBagConstraints( 2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-        this.add( vAcctSchema,new GridBagConstraints( 3,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-        this.add( lOrg,new GridBagConstraints( 4,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-        this.add( vOrg,new GridBagConstraints( 5,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-
+        //Valores por defecto para los campos de moneda
+        vCurrency.setEnabled(false);
+        lConversionType.setVisible(false);
+        vConversionType.setVisible(false);
+        lCurrencyRate.setVisible(false);
+        vCurrencyRate.setVisible(false);
+        
 	}
 	
 	private void fillPicks(){
@@ -157,9 +195,44 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 		vAcctSchema.addVetoableChangeListener(this);
 		lAcctSchema.setLabelFor(vAcctSchema);
 		
+		//Categoria Contable
+		MLookup GLCategoryL = MLookupFactory.get (Env.getCtx(), m_WindowNo, 0, 1530, DisplayType.TableDir);
+		vglCategory = new VLookup ("GL_Category_ID", true, false, true, GLCategoryL);
+		lglCategory.setText(Msg.translate(Env.getCtx(), "GL_Category_ID"));
+		vglCategory.addVetoableChangeListener(this);
+		lglCategory.setLabelFor(vglCategory);
+		
 		//Fecha Contable
 		lDateAcct.setText(Msg.translate(Env.getCtx(), "DateAcct"));
 		lDateAcct.setLabelFor(vDateAcct);
+		Calendar c2 = new GregorianCalendar();
+		
+		//Multimoneda
+		multicurrency= new CCheckBox(Msg.translate(Env.getCtx(), "MultiCurrency"));
+		multicurrency.addActionListener(this);
+		
+		//Moneda
+		MLookup CurrencyL = MLookupFactory.get (Env.getCtx(), m_WindowNo, 0, 457, DisplayType.TableDir);
+		vCurrency = new VLookup ("C_Currency_ID", true, false, true, CurrencyL);
+		lCurrency.setText(Msg.translate(Env.getCtx(), "C_Currency_ID"));
+		vCurrency.addVetoableChangeListener(this);
+		lCurrency.setLabelFor(vCurrency);
+		
+		//Tipo de Conversión
+		MLookup ConversionTypeL = MLookupFactory.get (Env.getCtx(), m_WindowNo, 0, 10269, DisplayType.TableDir);
+		vConversionType = new VLookup ("C_ConversionType_ID", true, false, true, ConversionTypeL);
+		lConversionType.setText(Msg.translate(Env.getCtx(), "C_ConversionType_ID"));
+		vConversionType.addVetoableChangeListener(this);
+		lConversionType.setLabelFor(vConversionType);
+		
+		//Tasa de Cambio
+		vCurrencyRate = new VNumber();
+		lCurrencyRate.setText(Msg.translate(Env.getCtx(), "CurrencyRate"));
+		lCurrencyRate.setLabelFor(vCurrencyRate);
+		
+		//Valor por defecto al panel
+		vDateAcct.setValue(new Timestamp(c2.getTimeInMillis()));
+		
 		
 		
 	}
@@ -177,7 +250,7 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	 * @return Fecha Contable
 	 */
 	
-	public Timestamp getDateAcct(){
+	public static Timestamp getDateAcct(){
 		return vDateAcct.getTimestamp();
 	}
 	
@@ -187,7 +260,7 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	 * @return Esquema Contable
 	 */
 	
-	public Object getAcctSchema(){
+	public static Object getAcctSchema(){
 		return vAcctSchema.getValue();
 	}
 	
@@ -197,7 +270,74 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	 * @return Organización
 	 */
 	
-	public Object getOrg(){
+	public static Object getOrg(){
 		return vOrg.getValue();
 	}
+	
+	/**
+	 * 
+	 * @return Currency
+	 */
+	
+	public static Object getCurrency(){
+		return vCurrency.getValue();
+	}
+	
+	/**
+	 * 
+	 * @return MultiCurrency
+	 */
+	
+	public static boolean isMultiCurrency(){
+		return multicurrency.isSelected();
+	}
+	
+	/**
+	 * 
+	 * @return ConversionType
+	 */
+	
+	public static Object getConversionType(){
+		return vConversionType.getValue();
+	}
+	
+	/**
+	 * 
+	 * @return ConversionType
+	 */
+	
+	public static Object getCurrencyRate(){
+		return vCurrencyRate.getValue();
+	}
+	
+	
+	/**
+	 * 
+	 * @return Organización
+	 */
+	
+	public static Object getGLCategory(){
+		return vglCategory.getValue();
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		if(arg0.getSource().equals(multicurrency)){
+			if(multicurrency.isSelected()){
+		        vCurrency.setEnabled(true);
+		        lConversionType.setVisible(true);
+		        vConversionType.setVisible(true);
+		        lCurrencyRate.setVisible(true);
+		        vCurrencyRate.setVisible(true);
+			}else{
+		        vCurrency.setEnabled(false);
+		        lConversionType.setVisible(false);
+		        vConversionType.setVisible(false);
+		        lCurrencyRate.setVisible(false);
+		        vCurrencyRate.setVisible(false);
+			}
+		}
+		
+	}
+	
 }
