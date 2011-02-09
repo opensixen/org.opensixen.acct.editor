@@ -67,6 +67,7 @@ import java.beans.PropertyChangeEvent;
 import org.compiere.grid.ed.VEditor;
 import org.compiere.model.GridField;
 import org.compiere.swing.CTextField;
+import org.opensixen.acct.form.AcctEditorJournal;
 import org.opensixen.acct.form.AcctEditorSearch;
 
 /**
@@ -86,7 +87,6 @@ public class AccountString extends CTextField implements KeyListener, VEditor{
 	
 
 	public AccountString(){
-		System.out.println("En constructor de AccountString");
 		//Añadimos el evento de teclado
 		this.addKeyListener(this);
 		this.addPropertyChangeListener(this);
@@ -96,16 +96,14 @@ public class AccountString extends CTextField implements KeyListener, VEditor{
 	public void keyPressed(KeyEvent arg0) {	
 		//Detectamos intro
 		if(arg0.getKeyCode()==KeyEvent.VK_ENTER){
-
-			System.out.println(this.requestFocusInWindow());
-			this.requestFocus();
-			this.grabFocus();
+			//Automáticamente situamos el cursor en la columna siguiente no en la fila siguiente
+			arg0.setKeyCode(java.awt.event.KeyEvent.VK_TAB); 
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent arg0) {
-		//System.out.println("2Evento="+arg0.getKeyCode());
+
 	}
 
 	@Override

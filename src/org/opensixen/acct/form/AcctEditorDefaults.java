@@ -79,13 +79,20 @@ import javax.swing.JPanel;
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VLookup;
 import org.compiere.grid.ed.VNumber;
+import org.compiere.model.MClientInfo;
+import org.compiere.model.MConversionType;
+import org.compiere.model.MCurrency;
+import org.compiere.model.MGLCategory;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
+import org.compiere.model.MOrg;
 import org.compiere.swing.CCheckBox;
 import org.compiere.swing.CLabel;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.opensixen.model.POFactory;
+import org.opensixen.model.QParam;
 
 /**
  * 
@@ -205,7 +212,7 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 		//Fecha Contable
 		lDateAcct.setText(Msg.translate(Env.getCtx(), "DateAcct"));
 		lDateAcct.setLabelFor(vDateAcct);
-		Calendar c2 = new GregorianCalendar();
+		
 		
 		//Multimoneda
 		multicurrency= new CCheckBox(Msg.translate(Env.getCtx(), "MultiCurrency"));
@@ -231,10 +238,40 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 		lCurrencyRate.setLabelFor(vCurrencyRate);
 		
 		//Valor por defecto al panel
+		defaultvalues();
+		
+	}
+	
+	/**
+	 * Setea los valores por defecto
+	 */
+	
+	private void defaultvalues(){
+		//Fecha Contable, por defecto fecha actual
+		Calendar c2 = new GregorianCalendar();
 		vDateAcct.setValue(new Timestamp(c2.getTimeInMillis()));
 		
+		//Euros por defecto, cogido de los valores de entorno
+		MCurrency currency = new MCurrency(Env.getCtx(),Env.getContextAsInt(Env.getCtx(), "$C_Currency_ID"),null);
+		vCurrency.setValue(currency.getC_Currency_ID());
 		
+		//Tipo de conversión por defecto
+		MConversionType config = POFactory.get(MConversionType.class, new QParam(MConversionType.COLUMNNAME_IsDefault, "Y"));
+		vConversionType.setValue(config.getC_ConversionType_ID());
 		
+		//Categoria CG
+		MGLCategory category = POFactory.get(MGLCategory.class, new QParam[]{
+								new QParam(MGLCategory.COLUMNNAME_IsDefault, "Y"),
+								new QParam(MGLCategory.COLUMNNAME_AD_Client_ID,Env.getAD_Client_ID(Env.getCtx()))});
+		vglCategory.setValue(category.getGL_Category_ID());
+		
+		//Esquema Contable (escogemos el asociado al grupo por defecto)
+		MClientInfo cinfo = POFactory.get(MClientInfo.class, new QParam(MClientInfo.COLUMNNAME_AD_Client_ID, Env.getAD_Client_ID(Env.getCtx())));
+		vAcctSchema.setValue(cinfo.getC_AcctSchema1_ID());
+		
+		//Empresa por defecto (la logueada)
+		MOrg org = POFactory.get(MOrg.class, new QParam(MOrg.COLUMNNAME_AD_Org_ID, Env.getAD_Org_ID(Env.getCtx())));
+		vOrg.setValue(org.getAD_Org_ID());
 	}
 
 	@Override

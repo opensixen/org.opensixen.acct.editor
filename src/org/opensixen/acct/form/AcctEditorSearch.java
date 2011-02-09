@@ -196,7 +196,6 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		ResultSet rs = null;
 		try
 		{
-			System.out.println("SQL="+m_sql);
 			pstmt = DB.prepareStatement(m_sql, null);
 			rs = pstmt.executeQuery();
 			elementstab.loadTable(rs);
@@ -220,7 +219,7 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 	 * @param row
 	 */
 	private void setSelectedValues(int row){
-		TableAccount act =principalPanel.getPanelJournal().getJournalTable();
+		TableAccount act =AcctEditorJournal.getJournalTable();
 		int prow=act.getSelectedRow();
 		IDColumn c =(IDColumn) elementstab.getValueAt(row, ElementsTable.COLUMN_ID);
 		act.setValueAt(elementstab.getValueAt(row, ElementsTable.COLUMN_VALUE), prow, TableAccount.COLUMN_Value);
@@ -248,11 +247,10 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 			//Nuevo asiento
 			//Reseteamos el panel y ponemos el número inicial de filas
 			principalPanel.getPanelJournal().preparetable();
-			principalPanel.getPanelJournal().getJournalTable().setRowCount(10);
+			AcctEditorJournal.getJournalTable().setRowCount(10);
 		}else if(arg0.getSource().equals(savejournal)){
-			System.out.println("En saveJournal");
 			//Guardar asiento actual
-			CreateJournal journal = new CreateJournal(principalPanel.getPanelJournal().getJournalTable()); 
+			new CreateJournal(AcctEditorJournal.getJournalTable()); 
 		}else if(arg0.getSource().equals(saveasdefault)){
 			//Guardar como asiento predefinido
 		}

@@ -99,7 +99,7 @@ import org.opensixen.acct.grid.TableAccount;
 
 public class AcctEditorJournal extends JPanel{
 	
-	private TableAccount journaltab;
+	private static TableAccount journaltab;
 	private CPanel paneltotals;
 	
 	private CLabel lAmtDr;
@@ -183,7 +183,7 @@ public class AcctEditorJournal extends JPanel{
 		journaltab.autoSize();
 	}
 	
-	protected TableAccount getJournalTable(){
+	protected static TableAccount getJournalTable(){
 		return journaltab;
 	}
 }

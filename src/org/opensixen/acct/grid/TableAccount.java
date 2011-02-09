@@ -118,7 +118,6 @@ public class TableAccount extends MiniTable implements IMiniTable {
 		setColumnReadOnly(index, readOnly);
 		if (c == AccountString.class)
 		{
-			System.out.println("En accountString");
 			tc.setCellRenderer(new AccountCellRenderer(DisplayType.String));
 			tc.setCellEditor(new AccountCellEditor(AccountString.class));			
 			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.String));
@@ -151,7 +150,6 @@ public class TableAccount extends MiniTable implements IMiniTable {
 		ColumnInfo[] info=this.getLayoutInfo();
 		AccountString acts=null;
 		
-		System.out.println("La clase de la columna="+this.getColumn(TableAccount.COLUMN_Value).getClass());
 		this.getValueAt(row, TableAccount.COLUMN_Value);
 		//Nos aseguramos que se la clase correcta
 		if(info[TableAccount.COLUMN_Value].getColClass().equals(AccountString.class)){

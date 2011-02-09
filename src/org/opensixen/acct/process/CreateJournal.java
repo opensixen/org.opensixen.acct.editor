@@ -60,30 +60,20 @@
  * ***** END LICENSE BLOCK ***** */
 package org.opensixen.acct.process;
 
-import java.awt.Dimension;
 
 import java.math.BigDecimal;
 
 import javax.swing.JOptionPane;
 
-import org.compiere.acct.Doc;
-import org.compiere.minigrid.ColumnInfo;
-import org.compiere.model.I_C_ValidCombination;
-import org.compiere.model.I_GL_JournalBatch;
-import org.compiere.model.MAcctSchema;
 import org.compiere.model.MDocType;
-import org.compiere.model.MFactAcct;
 import org.compiere.model.MJournal;
 import org.compiere.model.MJournalBatch;
 import org.compiere.model.MJournalLine;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.opensixen.acct.form.AcctEditorDefaults;
-import org.opensixen.acct.form.AcctEditorFormPanel;
-import org.opensixen.acct.grid.AccountCellEditor;
-import org.opensixen.acct.grid.AccountString;
 import org.opensixen.acct.grid.TableAccount;
-import org.opensixen.acct.swing.AcctEditorChoose;
+
 /**
  * 
  * CreateJournal 
@@ -102,18 +92,32 @@ public class CreateJournal {
 
 	public CreateJournal(TableAccount journalTable) {
 		t=journalTable;
-		int rows = journalTable.getRowCount();
+		int batch_id=CreateJournalBatch(true);
 		
-		for (int row = 0; row < rows; row++)
-		{
-			if(journalTable.getValueAt(row, TableAccount.COLUMN_ValidCombination)!=null)
-				CreateJournalBatch((Integer)journalTable.getValueAt(row, TableAccount.COLUMN_ValidCombination),true);
-
+		if(batch_id==0){
+			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Generate Journal Error"),Msg.translate(Env.getCtx(), "Error") , JOptionPane.ERROR_MESSAGE);
+			return;
 		}
+		
+		//Completamos el batchcreado
+		CompleteBatch(batch_id);
 	}
 	
 
-	private void CreateJournalBatch(int C_ValidCombiation_ID,boolean newregister){
+	private void CompleteBatch(int batch_id) {
+		MJournalBatch batch = new MJournalBatch(Env.getCtx(),batch_id,null);
+		batch.setDocAction( MJournalBatch.DOCACTION_Complete );
+		batch.processIt( MJournalBatch.DOCACTION_Complete );
+		
+		if (batch.save()){
+			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Batch Generated succesfully"),Msg.translate(Env.getCtx(), "Save") , JOptionPane.INFORMATION_MESSAGE);
+		}else{
+			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Generate Journal Error"),Msg.translate(Env.getCtx(), "Error") , JOptionPane.ERROR_MESSAGE);
+		}
+		
+	}
+
+	private int CreateJournalBatch(boolean newregister){
 		//Creamos en primer lugar la cabecera del asiento manual
 		MJournalBatch batch = null;
 		if(newregister)
@@ -124,44 +128,59 @@ public class CreateJournal {
 		batch.setPostingType(MJournalBatch.POSTINGTYPE_Actual);
 		batch.setGL_Category_ID((Integer)AcctEditorDefaults.getGLCategory());
 		batch.setAD_Org_ID((Integer)AcctEditorDefaults.getOrg());
-		batch.setC_Currency_ID(new MAcctSchema(Env.getCtx(),(Integer)AcctEditorDefaults.getAcctSchema(),null).getC_Currency_ID());
+		batch.setC_Currency_ID((Integer)AcctEditorDefaults.getCurrency());
 		batch.setDateAcct(AcctEditorDefaults.getDateAcct());
 		batch.setDateDoc(AcctEditorDefaults.getDateAcct());
 		batch.setC_DocType_ID(getDocType(MDocType.DOCBASETYPE_GLJournal));
 		batch.setDescription(Msg.translate(Env.getCtx(), "Journal manually made"));
-		if(batch.save())
-			CreatetoJournal(batch);
-		
+		if(batch.save()){
+			if(CreatetoJournal(batch))
+				return batch.getGL_JournalBatch_ID();
+		}
+		return 0;
 	}
 	
-	private void CreatetoJournal(MJournalBatch batch) {
+	private boolean CreatetoJournal(MJournalBatch batch) {
 		
 		MJournal journal = new MJournal(batch);
 		journal.setC_AcctSchema_ID((Integer)AcctEditorDefaults.getAcctSchema());
 		journal.setDescription(batch.getDescription());
 		journal.setGL_Category_ID((Integer)AcctEditorDefaults.getGLCategory());
-		
+		journal.setC_ConversionType_ID((Integer)AcctEditorDefaults.getConversionType());
 		if(journal.save()){
-			CreateJournalLines(journal);
+			return CreateJournalLines(journal);
 		}
+		
+		return false;
 		
 	}
 
-	private void CreateJournalLines(MJournal journal) {
+	private boolean CreateJournalLines(MJournal journal) {
 		
 		//Para cada linea creamos journalline
-		for(int row=0;row<t.getRowCount();row++){
-			//Comprobamos que la linea esté asociada
-			if(t.getValueAt(row, TableAccount.COLUMN_ValidCombination) != null){
-				MJournalLine jline = new MJournalLine(journal);
-				//Totales
-				jline.setAmtAcct((BigDecimal)t.getValueAt(row, TableAccount.COLUMN_AmtAcctDr), (BigDecimal)t.getValueAt(row, TableAccount.COLUMN_AmtAcctDr));
-				//Cuenta Asociada
-				jline.setC_ValidCombination_ID((Integer)t.getValueAt(row, TableAccount.COLUMN_ValidCombination));
-				jline.save();
-			}	
+		try{
+			for(int row=0;row<t.getRowCount();row++){
+				//Comprobamos que la linea esté asociada
+				if(t.getValueAt(row, TableAccount.COLUMN_ValidCombination) != null){
+					MJournalLine jline = new MJournalLine(journal);
+					//Totales
+					BigDecimal lDr=t.getValueAt(row, TableAccount.COLUMN_AmtAcctDr)==null?BigDecimal.ZERO:(BigDecimal)t.getValueAt(row, TableAccount.COLUMN_AmtAcctDr);
+					BigDecimal lCr=t.getValueAt(row, TableAccount.COLUMN_AmtAcctCr)==null?BigDecimal.ZERO:(BigDecimal)t.getValueAt(row, TableAccount.COLUMN_AmtAcctCr);
+				
+					jline.setAmtSourceDr(lDr);
+					jline.setAmtSourceCr(lCr);
+					jline.setAmtAcct(lDr, lCr);
+					//Cuenta Asociada
+					jline.setC_ValidCombination_ID((Integer)t.getValueAt(row, TableAccount.COLUMN_ValidCombination));
+					jline.save();
+				}	
+			}
 		}
-		
+		catch(Exception e){
+			//Con cualquier error ocurrido retornamos 
+			return false;
+		}
+		return true;
 	}
 
 	private int getDocType(String DocBaseType){

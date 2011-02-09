@@ -202,7 +202,6 @@ public class AcctEditorChoose extends org.compiere.swing.CDialog implements Acti
 		ResultSet rs = null;
 		try
 		{
-			System.out.println("SQL escoger="+m_sqlChoose);
 			pstmt = DB.prepareStatement(m_sqlChoose, null);
 			rs = pstmt.executeQuery();
 			t1.loadTable(rs);

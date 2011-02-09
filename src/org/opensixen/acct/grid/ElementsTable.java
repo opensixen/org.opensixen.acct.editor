@@ -62,7 +62,16 @@ package org.opensixen.acct.grid;
 
 
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+import javax.swing.table.TableColumn;
+
+import org.compiere.grid.ed.VCellRenderer;
+import org.compiere.grid.ed.VHeaderRenderer;
+import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.MiniTable;
+import org.compiere.util.DisplayType;
 
 /**
  * 
@@ -85,5 +94,23 @@ public class ElementsTable extends MiniTable{
 	       //No dejamos que sea editable
 	       return false;
 	   }
+	
+	public void setColumnClass (int index, Class c, boolean readOnly, String header)
+	{
+		super.setColumnClass(index,c,readOnly,header);
+
+		TableColumn tc = getColumnModel().getColumn(index);
+		if (tc == null)
+			return;
+
+		setColumnReadOnly(index, readOnly);
+		if (c == VLookup.class)
+		{
+			tc.setCellRenderer(new VCellRenderer(DisplayType.TableDir));
+			tc.setCellEditor(new AccountCellEditor(AccountString.class));			
+			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.String));
+		}
+		
+	}   //  setColumnClass
 
 }

@@ -132,7 +132,7 @@ public class AccountCellRenderer extends VCellRenderer{
 		else if (cCode < 0)
 			fg = AdempierePLAF.getTextColor_Issue();		//	Red
 		else
-			fg = Color.green;		//	Blue
+			fg = Color.BLUE;		//	Blue
 		
 		//	Highlighted row
 		if (isSelected)
