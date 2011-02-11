@@ -63,11 +63,14 @@ package org.opensixen.acct.form;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
@@ -99,7 +102,7 @@ public class AcctEditorFormPanel extends JPanel implements FormPanel,ActionListe
 	private AcctEditorJournal journal;
 	private AcctEditorDefaultEntry defaultentry;
 	
-	private JPanel centerPane= new JPanel(); 
+	private JSplitPane split1 = new JSplitPane();
 	
 	@Override
 	public void tableChanged(TableModelEvent arg0) {
@@ -140,20 +143,30 @@ public class AcctEditorFormPanel extends JPanel implements FormPanel,ActionListe
 	private void jbInit() throws Exception {
 		 	
 		this.setLayout(new BorderLayout());
-		centerPane.setLayout(new BorderLayout());
 	    //Panel parametros por defecto
 	    defaults= new AcctEditorDefaults(this); 	
 	    this.add(defaults, BorderLayout.NORTH);
-	    this.add(centerPane,BorderLayout.CENTER);
-	    
+	    this.add(split1,BorderLayout.CENTER);
+
 	    //Panel búsqueda
 	    search= new AcctEditorSearch(this);
-	    centerPane.add(search,BorderLayout.EAST);
-	    
+	    split1.add(search, JSplitPane.RIGHT);
 	    //Panel de edicion de asientos
 	    journal = new AcctEditorJournal(this);
-	    centerPane.add(journal,BorderLayout.WEST);
-	    	
+	    split1.add(journal, JSplitPane.LEFT);
+	    
+	    //Listener para el posicionamiento del divisor
+	    HierarchyListener hierarchyListener = new HierarchyListener() {
+	    	@Override
+			public void hierarchyChanged(HierarchyEvent e) {
+				long flags = e.getChangeFlags();
+		          if ((flags & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED) {
+		            split1.setDividerLocation(.80);
+		          }
+				
+			}
+	      };
+	     split1.addHierarchyListener(hierarchyListener);
 	    //Panel de asientos predefinidos
 	    defaultentry = new AcctEditorDefaultEntry(this);
 	    
@@ -207,4 +220,6 @@ public class AcctEditorFormPanel extends JPanel implements FormPanel,ActionListe
 	protected AcctEditorDefaultEntry getPanelDefaultEntry(){
 		return defaultentry;
 	}
+	
+	
 }

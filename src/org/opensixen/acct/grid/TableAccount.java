@@ -118,6 +118,7 @@ public class TableAccount extends MiniTable implements IMiniTable {
 		setColumnReadOnly(index, readOnly);
 		if (c == AccountString.class)
 		{
+			tc.setPreferredWidth(50);
 			tc.setCellRenderer(new AccountCellRenderer(DisplayType.String));
 			tc.setCellEditor(new AccountCellEditor(AccountString.class));			
 			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.String));
@@ -157,5 +158,30 @@ public class TableAccount extends MiniTable implements IMiniTable {
 			acts =(AccountString)editor.getEditorAt(this, row, TableAccount.COLUMN_Value);
 		}
 		return acts;
+	}
+	
+	public BigDecimal getAmtAcctDr(int row){
+		
+		return getValueAt(row, TableAccount.COLUMN_AmtAcctDr)==null?BigDecimal.ZERO:(BigDecimal)getValueAt(row, TableAccount.COLUMN_AmtAcctDr);
+	}
+	
+	public BigDecimal getAmtAcctCr(int row){
+		return getValueAt(row, TableAccount.COLUMN_AmtAcctCr)==null?BigDecimal.ZERO:(BigDecimal)getValueAt(row, TableAccount.COLUMN_AmtAcctCr);
+	}
+	
+	public BigDecimal getSumDr(){
+		BigDecimal amtdr=BigDecimal.ZERO;
+		for(int i=0;i<this.getRowCount();i++){
+			amtdr=amtdr.add(getAmtAcctDr(i));
+		}
+		return amtdr;
+	}
+	
+	public BigDecimal getSumCr(){
+		BigDecimal amtcr=BigDecimal.ZERO;
+		for(int i=0;i<this.getRowCount();i++){
+			amtcr=amtcr.add(getAmtAcctCr(i));
+		}
+		return amtcr;
 	}
 }

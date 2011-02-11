@@ -64,13 +64,21 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JViewport;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VNumber;
@@ -81,6 +89,7 @@ import org.compiere.model.MElementValue;
 import org.compiere.model.MFactAcct;
 import org.compiere.model.X_C_ValidCombination;
 import org.compiere.model.X_Fact_Acct;
+import org.compiere.swing.CButton;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
 import org.compiere.swing.CTextField;
@@ -88,6 +97,7 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.opensixen.acct.grid.AccountString;
 import org.opensixen.acct.grid.TableAccount;
+import org.opensixen.acct.process.CreateJournal;
 
 /**
  * 
@@ -97,19 +107,24 @@ import org.opensixen.acct.grid.TableAccount;
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class AcctEditorJournal extends JPanel{
+public class AcctEditorJournal extends JPanel implements PropertyChangeListener,ActionListener{
 	
 	private static TableAccount journaltab;
 	private CPanel paneltotals;
+	private CPanel panelbuttons;
+	private CPanel p2;
 	
 	private CLabel lAmtDr;
 	private VNumber fAmtDr;
 	private CLabel lAmtCr;
 	private VNumber fAmtCr;
 	private CLabel lDifference;
-	private VNumber fDifference;
+	private static VNumber fDifference;
 	
 	private int RowHeight=40;
+	private CButton newjournal;
+	private CButton savejournal;
+	private CButton saveasdefault;
 	
 	public AcctEditorJournal(){
 		initComponents();
@@ -127,6 +142,21 @@ public class AcctEditorJournal extends JPanel{
 		paneltotals= new CPanel();
 		paneltotals.setLayout(new GridBagLayout());
 		
+		panelbuttons= new CPanel();
+		panelbuttons.setLayout(new GridBagLayout());
+		
+		p2= new CPanel();
+		p2.setLayout(new BorderLayout());
+		
+		newjournal = new CButton(Msg.translate(Env.getCtx(), "New Journal"));
+		savejournal = new CButton(Msg.translate(Env.getCtx(), "Save Journal"));
+		saveasdefault = new CButton(Msg.translate(Env.getCtx(), "Save As Default"));
+		savejournal.setBorder( BorderFactory.createEtchedBorder());
+		
+		newjournal.addActionListener(this);
+		savejournal.addActionListener(this);
+		saveasdefault.addActionListener(this);
+		
 		fillPicks();
 		
 		paneltotals.add( lAmtDr,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
@@ -135,28 +165,61 @@ public class AcctEditorJournal extends JPanel{
 		paneltotals.add( fAmtCr,new GridBagConstraints( 3,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
 		paneltotals.add( lDifference,new GridBagConstraints( 4,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
 		paneltotals.add( fDifference,new GridBagConstraints( 5,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+		
+		panelbuttons.add( saveasdefault,new GridBagConstraints( 0,0,1,2,0.0,0.5,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 5,10,2,10 ),5,20 ));
+		panelbuttons.add( newjournal,new GridBagConstraints( 1,0,1,2,0.0,0.5,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets( 5,10,2,10 ),10,25 ));
+		panelbuttons.add( savejournal,new GridBagConstraints( 2,0,1,2,0.0,0.5,GridBagConstraints.EAST,GridBagConstraints.BOTH,new Insets( 5,10,2,2 ),10,25 ));
 
-
+		p2.add(paneltotals,BorderLayout.NORTH);
+		p2.add(panelbuttons,BorderLayout.CENTER);
+		
 		journaltab = new TableAccount();
 		this.add(new JScrollPane(journaltab),BorderLayout.CENTER);
-		this.add(paneltotals,BorderLayout.SOUTH);
+		this.add(p2,BorderLayout.SOUTH);
 		preparetable();
+		journaltab.addPropertyChangeListener(this);
 		
 	}
+	
+	public void setColumnWith(){        
+		//Columna Valor de Cuenta ancho fijo
+	    TableColumn columnAcct = journaltab.getColumnModel().getColumn(TableAccount.COLUMN_Value) ;
+	    columnAcct.setPreferredWidth(120); 
+	    columnAcct.setMinWidth(120);
+	    
+	    //Columna Descripción de cuenta
+	    columnAcct = journaltab.getColumnModel().getColumn(TableAccount.COLUMN_Name) ;
+	    columnAcct.setPreferredWidth(200); 
+	    columnAcct.setMinWidth(200);
+	    
+	    //Columna Numero Asiento
+	    columnAcct = journaltab.getColumnModel().getColumn(TableAccount.COLUMN_JournalNo) ;
+	    columnAcct.setPreferredWidth(80); 
+	    columnAcct.setMaxWidth(80);
+	    
+	    //Columna Fecha
+	    columnAcct = journaltab.getColumnModel().getColumn(TableAccount.COLUMN_DateAcct) ;
+	    columnAcct.setPreferredWidth(80); 
+	    columnAcct.setMaxWidth(80);
+	   
+	}  
 	
 	private void fillPicks(){
 		lAmtDr= new CLabel();
 		fAmtDr = new VNumber();
+		fAmtDr.setReadWrite(false);
 		lAmtDr.setText(Msg.translate(Env.getCtx(), "AmtAcctDr"));
 		lAmtDr.setLabelFor(fAmtDr);
 		
 		lAmtCr= new CLabel();
 		fAmtCr = new VNumber();
+		fAmtCr.setReadWrite(false);
 		lAmtCr.setText(Msg.translate(Env.getCtx(), "AmtAcctCr"));
 		lAmtCr.setLabelFor(fAmtCr);
 		
 		lDifference= new CLabel();
 		fDifference = new VNumber();
+		fDifference.setReadWrite(false);
 		lDifference.setText(Msg.translate(Env.getCtx(), "Difference"));
 		lDifference.setLabelFor(fDifference);
 	}
@@ -180,10 +243,45 @@ public class AcctEditorJournal extends JPanel{
 
 		journaltab.setRowHeight(RowHeight);
 		journaltab.prepareTable(s_layoutJournal, "", "", true, null);
-		journaltab.autoSize();
+		//journaltab.autoSize();
+		journaltab.setAutoResizeMode(TableAccount.AUTO_RESIZE_ALL_COLUMNS);
+		setColumnWith();
 	}
 	
 	protected static TableAccount getJournalTable(){
 		return journaltab;
+	}
+
+
+	@Override
+	public void propertyChange(PropertyChangeEvent arg0) {
+		//Cada vez que ocurran cambios en el panel recalculamos la suma debe, haber y diferencia 
+		//Suma Debe
+		fAmtDr.setValue(journaltab.getSumDr());
+		//Suma Haber
+		fAmtCr.setValue(journaltab.getSumCr());
+		//Diferencia
+		fDifference.setValue(((BigDecimal)fAmtDr.getValue()).subtract((BigDecimal)fAmtCr.getValue()));
+	}
+	
+	public BigDecimal getDifference(){
+		return (BigDecimal)fDifference.getValue();
+	}
+
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		if(arg0.getSource().equals(newjournal)){
+			//Nuevo asiento
+			//Reseteamos el panel y ponemos el número inicial de filas
+			preparetable();
+			journaltab.setRowCount(10);
+		}else if(arg0.getSource().equals(savejournal)){
+			//Guardar asiento actual
+			new CreateJournal(journaltab); 
+		}else if(arg0.getSource().equals(saveasdefault)){
+			//Guardar como asiento predefinido
+		}
+		
 	}
 }

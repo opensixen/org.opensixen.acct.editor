@@ -70,16 +70,21 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import org.compiere.acct.AcctViewer;
 import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
 import org.compiere.model.I_C_ValidCombination;
+import org.compiere.model.MBPartner;
 import org.compiere.model.MElementValue;
 import org.compiere.swing.CButton;
+import org.compiere.swing.CMenuItem;
 import org.compiere.swing.CPanel;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -111,10 +116,13 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 	private CButton saveasdefault;
 	
 	private CPanel totalPanel;
-	private CPanel buttonsPanel;
 	private AcctEditorFormPanel principalPanel;
 	
-	
+	JPopupMenu 					popupMenu = new JPopupMenu();
+	private CMenuItem 			mZoomPartner;
+	private CMenuItem 			mZoomAccounts;
+	private CMenuItem			mZoomProduct;
+
 	
 	private MouseListener mouseListener = new AcctEditorMouseAdapter( this );
 	
@@ -126,24 +134,19 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 	public AcctEditorSearch(AcctEditorFormPanel acctEditorFormPanel) {
 		principalPanel=acctEditorFormPanel;
 		initComponents();
+
 	}
 
 
 	private void initComponents() {
 
-		buttonsPanel = new CPanel();
 		elementstab = new ElementsTable();
 		
 		this.setLayout(new BorderLayout());
-		buttonsPanel.setLayout(new GridLayout(3,1));
 		
 		newjournal = new CButton(Msg.translate(Env.getCtx(), "New Journal"));
 		savejournal = new CButton(Msg.translate(Env.getCtx(), "Save Journal"));
 		saveasdefault = new CButton(Msg.translate(Env.getCtx(), "Save As Default"));
-		
-		buttonsPanel.add(newjournal);
-		buttonsPanel.add(savejournal);
-		buttonsPanel.add(saveasdefault);
 		
 		newjournal.addActionListener(this);
 		savejournal.addActionListener(this);
@@ -151,9 +154,8 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		
 		elementstab.addMouseListener( mouseListener );
 		this.add(new JScrollPane(elementstab),BorderLayout.NORTH);
-		this.add(buttonsPanel,BorderLayout.CENTER);
 		preparetable();
-		
+		addMenuPopup();
 	}
 
 	public static void setParameter(Object parameter){
@@ -179,7 +181,7 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		ColumnInfo[] s_layoutJournal = new ColumnInfo[]{
 				new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID), I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID, IDColumn.class, false, true, null),
          		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Value), MElementValue.COLUMNNAME_Value, String.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_BPartner_ID),  "v."+I_C_ValidCombination.COLUMNNAME_C_BPartner_ID, VLookup.class, false, true, null)};
+        		new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_BPartner_ID),  "v."+I_C_ValidCombination.COLUMNNAME_C_BPartner_ID, MBPartner.class, false, true, null)};
 
 
 		elementstab.setModel(new DefaultTableModel());
@@ -228,6 +230,23 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 
 	}
 
+	private void addMenuPopup() {
+		
+		mZoomPartner = new CMenuItem(Msg.translate(Env.getCtx(), "ZoomPartner"));
+		mZoomAccounts = new CMenuItem(Msg.translate(Env.getCtx(), "ZoomAccount"));
+		mZoomProduct = new CMenuItem(Msg.translate(Env.getCtx(), "ZoomProduct"));
+		
+		mZoomPartner.addActionListener(this);
+		mZoomAccounts.addActionListener(this);
+		mZoomProduct.addActionListener(this);
+		
+		popupMenu.add(mZoomPartner);
+		popupMenu.add(mZoomAccounts);
+		popupMenu.add(mZoomProduct);
+		
+		popupMenu.addMouseListener(mouseListener);
+	}
+
 
 	public void mouseClicked(MouseEvent e) {
 		 if( e.getSource() instanceof MiniTable ) {
@@ -237,22 +256,25 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 	            
 	         }
 	      }    
+		  if (SwingUtilities.isRightMouseButton(e))
+				popupMenu.show(this, e.getX(), e.getY());
+		  else
+				popupMenu.setVisible(false);
 		
 	}
 
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		if(arg0.getSource().equals(newjournal)){
-			//Nuevo asiento
-			//Reseteamos el panel y ponemos el número inicial de filas
-			principalPanel.getPanelJournal().preparetable();
-			AcctEditorJournal.getJournalTable().setRowCount(10);
-		}else if(arg0.getSource().equals(savejournal)){
-			//Guardar asiento actual
-			new CreateJournal(AcctEditorJournal.getJournalTable()); 
-		}else if(arg0.getSource().equals(saveasdefault)){
-			//Guardar como asiento predefinido
+		 if(arg0.getSource().equals(mZoomPartner)){
+			
+		}else if(arg0.getSource().equals(mZoomProduct)){
+			
+		}else if(arg0.getSource().equals(mZoomAccounts)){
+			//Visor de cuentas con los campos de búsqueda rellenos con los valores de la validcombination seleccionada
+			//AccountViewer view = new AccountViewer(); //Este es el visor de cuentas de un registro en concreto
+			//AcctViewer view = new AcctViewer(); //Este es el visor de cuentas mediante búsqueda de la aplicación
+			AcctViewer view = new AcctViewer(1000008,318,1013450);
 		}
 		
 	}

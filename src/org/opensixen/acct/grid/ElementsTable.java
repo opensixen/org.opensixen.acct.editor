@@ -62,16 +62,34 @@ package org.opensixen.acct.grid;
 
 
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.table.TableColumn;
 
+import org.compiere.acct.AcctViewer;
+import org.compiere.grid.ed.VCellEditor;
 import org.compiere.grid.ed.VCellRenderer;
 import org.compiere.grid.ed.VHeaderRenderer;
 import org.compiere.grid.ed.VLookup;
+import org.compiere.minigrid.MiniCellEditor;
 import org.compiere.minigrid.MiniTable;
+import org.compiere.model.MBPartner;
+import org.compiere.model.MDocType;
+import org.compiere.model.MLookup;
+import org.compiere.model.MLookupFactory;
+import org.compiere.swing.CMenuItem;
 import org.compiere.util.DisplayType;
+import org.compiere.util.Env;
+import org.compiere.util.Msg;
+import org.opensixen.swing.AccountViewer;
 
 /**
  * 
@@ -81,13 +99,19 @@ import org.compiere.util.DisplayType;
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class ElementsTable extends MiniTable{
+public class ElementsTable extends MiniTable {
 
 	public static int COLUMN_ID=0;   
 	public static int COLUMN_VALUE=1;
 	public static int COLUMN_DESCRIPTION=2;   
 	
 	private static final long serialVersionUID = 1L;
+	
+	public ElementsTable(){
+		super();
+	}
+
+
 
 	public boolean isCellEditable (int row, int column)
 	   {
@@ -104,13 +128,16 @@ public class ElementsTable extends MiniTable{
 			return;
 
 		setColumnReadOnly(index, readOnly);
-		if (c == VLookup.class)
+		if (c == MBPartner.class)
 		{
-			tc.setCellRenderer(new VCellRenderer(DisplayType.TableDir));
-			tc.setCellEditor(new AccountCellEditor(AccountString.class));			
-			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.String));
+			
+			 
+			tc.setCellRenderer(new LookupRenderer(DisplayType.TableDir));
+			tc.setCellEditor(new LookupEditor(c));			
+			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.TableDir));
 		}
 		
 	}   //  setColumnClass
+	
 
 }

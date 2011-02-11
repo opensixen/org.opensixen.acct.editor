@@ -86,4 +86,5 @@ public class AcctEditorMouseAdapter extends MouseAdapter{
     public void mouseClicked( MouseEvent e ) {
         adaptee.mouseClicked( e );
     }
+    
 }
