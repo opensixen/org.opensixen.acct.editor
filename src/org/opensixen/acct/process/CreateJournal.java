@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -103,6 +103,10 @@ public class CreateJournal {
 		CompleteBatch(batch_id);
 	}
 	
+	/**
+	 * Completa el journal creado
+	 * @param batch_id
+	 */
 
 	private void CompleteBatch(int batch_id) {
 		MJournalBatch batch = new MJournalBatch(Env.getCtx(),batch_id,null);

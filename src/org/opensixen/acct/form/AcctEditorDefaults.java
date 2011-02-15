@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -68,14 +68,10 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VLookup;
 import org.compiere.grid.ed.VNumber;
@@ -91,6 +87,7 @@ import org.compiere.swing.CLabel;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.opensixen.acct.grid.TableAccount;
 import org.opensixen.model.POFactory;
 import org.opensixen.model.QParam;
 
@@ -120,34 +117,34 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	
 	//Categoría Contable
 	private CLabel lglCategory = new CLabel();
-	private static VLookup vglCategory;
+	protected static VLookup vglCategory;
 	
 	//Esquema Contable
 	private CLabel lAcctSchema = new CLabel();
-	private static VLookup vAcctSchema;
+	protected static VLookup vAcctSchema;
 	
 	//Fecha Contable
 	private CLabel lDateAcct = new CLabel();
-	private static VDate vDateAcct= new VDate();
+	protected static VDate vDateAcct= new VDate();
 	
 	//Organización
 	private CLabel lOrg = new CLabel();
-	private static VLookup vOrg;
+	protected static VLookup vOrg;
 	
 	//Multimoneda
-	private static CCheckBox multicurrency;
+	protected static CCheckBox multicurrency;
 	
 	//Moneda
 	private CLabel lCurrency = new CLabel();
-	private static VLookup vCurrency;
+	protected static VLookup vCurrency;
 	
 	//Tipo de Conversión
 	private CLabel lConversionType = new CLabel();
-	private static VLookup vConversionType;
+	protected static VLookup vConversionType;
 	
 	//Tipo de Conversión
 	private CLabel lCurrencyRate = new CLabel();
-	private static VNumber vCurrencyRate;
+	protected static VNumber vCurrencyRate;
 	
 	public AcctEditorDefaults(){
 		initComponents();
@@ -212,7 +209,7 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 		//Fecha Contable
 		lDateAcct.setText(Msg.translate(Env.getCtx(), "DateAcct"));
 		lDateAcct.setLabelFor(vDateAcct);
-		
+		vDateAcct.addVetoableChangeListener(this);
 		
 		//Multimoneda
 		multicurrency= new CCheckBox(Msg.translate(Env.getCtx(), "MultiCurrency"));
@@ -277,7 +274,9 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	@Override
 	public void vetoableChange(PropertyChangeEvent arg0)
 			throws PropertyVetoException {
-		// TODO Auto-generated method stub
+		if(arg0.getSource().equals(vDateAcct)){
+			setDateOnJournal(arg0.getNewValue());
+		}
 		
 	}
 	
@@ -286,6 +285,10 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	 * 
 	 * @return Fecha Contable
 	 */
+	public static VDate getDateField(){
+		return vDateAcct;
+	}
+	
 	
 	public static Timestamp getDateAcct(){
 		return vDateAcct.getTimestamp();
@@ -350,13 +353,31 @@ public class AcctEditorDefaults extends JPanel implements VetoableChangeListener
 	
 	/**
 	 * 
-	 * @return Organización
+	 * @return Categoría Contable
 	 */
 	
 	public static Object getGLCategory(){
 		return vglCategory.getValue();
 	}
 
+	/**
+	 * Setea valor de fecha en tabla de diario
+	 */
+	
+	public static  void setDateOnJournal(){
+		setDateOnJournal(getDateAcct());
+	}
+	
+	public static void setDateOnJournal(Object date){
+		for(int i=0;i<AcctEditorJournal.getJournalTable().getRowCount();i++)
+			AcctEditorJournal.getJournalTable().setValueAt(date, i, TableAccount.COLUMN_DateAcct);
+	}
+	
+	/**
+	 *
+	 */
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(multicurrency)){

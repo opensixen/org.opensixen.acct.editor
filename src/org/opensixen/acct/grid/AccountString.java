@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -58,6 +58,7 @@
  * lo gobiernan,  GPL 2.0/CDDL 1.0/EPL 1.0.
  *
  * ***** END LICENSE BLOCK ***** */
+
 package org.opensixen.acct.grid;
 
 import java.awt.event.KeyEvent;
@@ -67,7 +68,6 @@ import java.beans.PropertyChangeEvent;
 import org.compiere.grid.ed.VEditor;
 import org.compiere.model.GridField;
 import org.compiere.swing.CTextField;
-import org.opensixen.acct.form.AcctEditorJournal;
 import org.opensixen.acct.form.AcctEditorSearch;
 
 /**

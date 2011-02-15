@@ -60,31 +60,47 @@
  * ***** END LICENSE BLOCK ***** */
 package org.opensixen.acct.utils;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.Color;
 
-import org.opensixen.acct.form.AcctEditorSearch;
-
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.border.Border;
 /**
  * 
- * AcctEditorMouseAdapter 
+ * AcctEditorSwingUtils
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class AcctEditorMouseAdapter extends MouseAdapter{
-	  /** Descripción de Campos */
+public class AcctEditorSwingUtils {
+	
+	private static Color BorderColor =Color.red;
+	
+	public static JComponent setBorder(JComponent comp,boolean setBorder){
+	      return setBorder(comp,setBorder,BorderColor);
+	}
+	
+	public static JComponent setBorder(JComponent comp,boolean setBorder,Color col){
+        Border redline = BorderFactory.createLineBorder(col);
+        Border raisedbevel = BorderFactory.createRaisedBevelBorder();
+        Border loweredbevel = BorderFactory.createLoweredBevelBorder();
 
-    AcctEditorSearch adaptee;
+        Border compound1 = BorderFactory.createCompoundBorder(raisedbevel, loweredbevel);
 
-    public AcctEditorMouseAdapter( AcctEditorSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
-
-
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
-    
+        Border compound2 = BorderFactory.createCompoundBorder(redline, compound1);
+        
+        if(setBorder)
+        	comp.setBorder(compound2);
+        else
+        	comp.setBorder(null);
+        
+        return comp;
+	}
+	
+	public static JComponent removeBorder(JComponent comp){
+		comp.setBorder(null);
+		return comp;
+	}
+	
 }

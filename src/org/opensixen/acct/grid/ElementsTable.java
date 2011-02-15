@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -62,34 +62,13 @@ package org.opensixen.acct.grid;
 
 
 
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.math.BigDecimal;
-import java.sql.Timestamp;
 
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 import javax.swing.table.TableColumn;
 
-import org.compiere.acct.AcctViewer;
-import org.compiere.grid.ed.VCellEditor;
-import org.compiere.grid.ed.VCellRenderer;
 import org.compiere.grid.ed.VHeaderRenderer;
-import org.compiere.grid.ed.VLookup;
-import org.compiere.minigrid.MiniCellEditor;
 import org.compiere.minigrid.MiniTable;
-import org.compiere.model.MBPartner;
-import org.compiere.model.MDocType;
-import org.compiere.model.MLookup;
-import org.compiere.model.MLookupFactory;
-import org.compiere.swing.CMenuItem;
+import org.compiere.model.MAccount;
 import org.compiere.util.DisplayType;
-import org.compiere.util.Env;
-import org.compiere.util.Msg;
-import org.opensixen.swing.AccountViewer;
 
 /**
  * 
@@ -128,12 +107,9 @@ public class ElementsTable extends MiniTable {
 			return;
 
 		setColumnReadOnly(index, readOnly);
-		if (c == MBPartner.class)
+		if (c == MAccount.class)
 		{
-			
-			 
-			tc.setCellRenderer(new LookupRenderer(DisplayType.TableDir));
-			tc.setCellEditor(new LookupEditor(c));			
+			tc.setCellRenderer(new AcctCombinationRenderer(DisplayType.String));			
 			tc.setHeaderRenderer(new VHeaderRenderer(DisplayType.TableDir));
 		}
 		

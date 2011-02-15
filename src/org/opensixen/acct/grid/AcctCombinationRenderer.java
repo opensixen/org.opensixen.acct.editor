@@ -58,33 +58,63 @@
  * lo gobiernan,  GPL 2.0/CDDL 1.0/EPL 1.0.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.opensixen.acct.utils;
+package org.opensixen.acct.grid;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.Component;
 
-import org.opensixen.acct.form.AcctEditorSearch;
+import javax.swing.JTable;
 
+import org.compiere.grid.ed.VCellRenderer;
+import org.compiere.grid.ed.VString;
+import org.compiere.model.GridField;
+import org.compiere.model.MAccount;
+import org.compiere.model.MBPartner;
+import org.compiere.model.MProduct;
+import org.compiere.util.Env;
 /**
  * 
- * AcctEditorMouseAdapter 
+ * AcctCombinationRenderer
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class AcctEditorMouseAdapter extends MouseAdapter{
-	  /** Descripción de Campos */
+public class AcctCombinationRenderer extends VCellRenderer{
 
-    AcctEditorSearch adaptee;
+	private Object m_value=null;
+	private MAccount t=null;
+	
+	public AcctCombinationRenderer(GridField mField) {
+		super(mField);
+		// TODO Auto-generated constructor stub
+	}
+	
+	public AcctCombinationRenderer(int displayType) {
+		super(displayType);
+		
+	}
+	
+	protected void setValue(Object value)
+	{
 
-    public AcctEditorMouseAdapter( AcctEditorSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
+		m_value=value.toString();
+	}   //  setValue
+	
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+	{
+		setValue(value);
 
+		t = new MAccount(Env.getCtx(),Integer.valueOf(value.toString()),null);
+		String val = t.getAccount().getName();
+		if(t.getC_BPartner_ID()>0)
+			val+="-".concat(new MBPartner(Env.getCtx(),t.getC_BPartner_ID(),null).getName());
+		if(t.getM_Product_ID()>0)
+			val+="-".concat(new MProduct(Env.getCtx(),t.getM_Product_ID(),null).getName());
+		
+		VString str = new VString("String", false, false, true, val.length(), val.length(), "", null);
+		str.setText(val);
 
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
-    
+		return str;
+	}   //  setTableCellRenderereComponent
+
 }

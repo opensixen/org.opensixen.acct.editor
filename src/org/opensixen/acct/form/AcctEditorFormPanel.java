@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -166,7 +166,7 @@ public class AcctEditorFormPanel extends JPanel implements FormPanel,ActionListe
 				
 			}
 	      };
-	     split1.addHierarchyListener(hierarchyListener);
+	    split1.addHierarchyListener(hierarchyListener);
 	    //Panel de asientos predefinidos
 	    defaultentry = new AcctEditorDefaultEntry(this);
 	    

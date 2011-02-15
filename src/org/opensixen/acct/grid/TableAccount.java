@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -60,28 +60,20 @@
  * ***** END LICENSE BLOCK ***** */
 package org.opensixen.acct.grid;
 
-import java.awt.Insets;
+import java.awt.Color;
+import java.awt.Component;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-
-import javax.swing.DefaultCellEditor;
-import javax.swing.SwingConstants;
+import javax.swing.JComponent;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import org.compiere.grid.ed.VCellRenderer;
 import org.compiere.grid.ed.VHeaderRenderer;
-import org.compiere.minigrid.CheckRenderer;
 import org.compiere.minigrid.ColumnInfo;
-import org.compiere.minigrid.IDColumn;
-import org.compiere.minigrid.IDColumnEditor;
-import org.compiere.minigrid.IDColumnRenderer;
 import org.compiere.minigrid.IMiniTable;
-import org.compiere.minigrid.MiniCellEditor;
 import org.compiere.minigrid.MiniTable;
-import org.compiere.minigrid.ROCellEditor;
-import org.compiere.swing.CCheckBox;
 import org.compiere.util.DisplayType;
-import org.compiere.util.Util;
+import org.opensixen.acct.utils.AcctEditorSwingUtils;
 
 /**
  * 
@@ -93,9 +85,7 @@ import org.compiere.util.Util;
 
 public class TableAccount extends MiniTable implements IMiniTable {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 	
 	public static int COLUMN_JournalNo=0;   
@@ -106,7 +96,12 @@ public class TableAccount extends MiniTable implements IMiniTable {
 	public static int COLUMN_AmtAcctDr=5;   
 	public static int COLUMN_AmtAcctCr=6;   
 	public static int COLUMN_ValidCombination=7;
-
+	
+	private int RowSelect=-1;
+	private int ColumnSelect=-1;
+	
+	protected static Color ColorError =Color.RED;
+	
 	public void setColumnClass (int index, Class c, boolean readOnly, String header)
 	{
 		super.setColumnClass(index,c,readOnly,header);
@@ -147,6 +142,12 @@ public class TableAccount extends MiniTable implements IMiniTable {
 		}
 	}   //  setColumnClass
 	
+	/**
+	 * Devuelve la clase AccountString relacionada con la fila
+	 * @param row
+	 * @return
+	 */
+	
 	public AccountString getValueAccount(int row){
 		ColumnInfo[] info=this.getLayoutInfo();
 		AccountString acts=null;
@@ -184,4 +185,72 @@ public class TableAccount extends MiniTable implements IMiniTable {
 		}
 		return amtcr;
 	}
+	
+	/**
+	 * Actualiza el borde en caso de error
+	 * @param column
+	 * @param row
+	 */
+	
+	public void ColorCell(TableColumn column, int row) 
+	{
+
+		this.RowSelect=row;
+		this.ColumnSelect=column.getModelIndex();
+		AccountCellRenderer renderer = new AccountCellRenderer(DisplayType.String);
+		column.setCellRenderer(renderer);
+		this.repaint();
+		//
+	}
+	
+	/**
+	 * Elimina el borde en caso de error
+	 * @param column
+	 * @param row
+	 */
+	
+	public void RemoveColorCell(TableColumn column, int row) 
+	{
+
+		this.RowSelect=-1;
+		this.ColumnSelect=-1;
+		AccountCellRenderer renderer = new AccountCellRenderer(DisplayType.String);
+		column.setCellRenderer(renderer);
+		this.repaint();
+		//
+	}
+	
+	public Component prepareRenderer(TableCellRenderer renderer, int rowIndex,
+			int vColIndex) {
+		Color blue = new Color(163, 182, 218);
+		Component c = super.prepareRenderer(renderer, rowIndex, vColIndex);
+		if (c==null) return c;
+
+		if (!this.isCellEditable(rowIndex, vColIndex) || isCellSelected(rowIndex, vColIndex) )
+			return c; 
+		if (rowIndex % 2 == 0) { 
+			c.setBackground(blue);
+		} else {
+			// If not shaded, match the table's background
+			c.setBackground(getBackground());
+		}
+		if((rowIndex==RowSelect && vColIndex==ColumnSelect)){
+			//c.setBackground(ColorError);
+			if(c instanceof JComponent){
+				JComponent s =(JComponent) ((AccountCellRenderer)c).getTableCellRendererComponent(this, getValueAt(rowIndex, vColIndex), false, false, rowIndex, vColIndex);
+				c =AcctEditorSwingUtils.setBorder(s, true);
+			}
+				
+		}
+		return c; 
+	}
+	
+	public int getRowSelect(){
+		return RowSelect;
+	}
+	
+	public int getColumnSelect(){
+		return ColumnSelect;
+	}
+	
 }

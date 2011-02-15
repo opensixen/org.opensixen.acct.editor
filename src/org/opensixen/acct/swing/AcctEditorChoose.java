@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -64,34 +64,26 @@ import java.awt.BorderLayout;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
-import javax.swing.table.DefaultTableModel;
 
 import org.compiere.apps.ConfirmPanel;
 import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
-import org.compiere.model.I_C_ValidCombination;
 import org.compiere.model.MDocType;
-import org.compiere.model.MElementValue;
-import org.compiere.model.MFactAcct;
 import org.compiere.model.PO;
-import org.compiere.model.X_C_ValidCombination;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.opensixen.acct.grid.AccountString;
 
 /**
  * 

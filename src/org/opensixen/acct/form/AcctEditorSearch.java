@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -61,7 +61,6 @@
 package org.opensixen.acct.form;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -74,14 +73,11 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
-
-import org.compiere.acct.AcctViewer;
-import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
 import org.compiere.model.I_C_ValidCombination;
-import org.compiere.model.MBPartner;
+import org.compiere.model.MAccount;
 import org.compiere.model.MElementValue;
 import org.compiere.swing.CButton;
 import org.compiere.swing.CMenuItem;
@@ -89,11 +85,8 @@ import org.compiere.swing.CPanel;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.opensixen.acct.grid.AccountCellEditor;
-import org.opensixen.acct.grid.AccountString;
 import org.opensixen.acct.grid.ElementsTable;
 import org.opensixen.acct.grid.TableAccount;
-import org.opensixen.acct.process.CreateJournal;
 import org.opensixen.acct.utils.AcctEditorMouseAdapter;
 
 /**
@@ -163,11 +156,19 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		searchElements();
 	}
 	
+	/**
+	 * Prepara la cláusula sql y ejecuta la sentencia
+	 */
+	
 	private static void searchElements(){
 		//Establecemos las condiciones de búsqueda
 		sql_Where="m.".concat(MElementValue.COLUMNNAME_Value).concat(" LIKE '").concat(SearchParam).concat("%'");
 		sql_Where+=" AND ";
 		sql_Where+="m.".concat(MElementValue.COLUMNNAME_IsSummary).concat(" LIKE 'N'");
+		//Empresa escogida y 0
+		sql_Where+=" AND v.".concat(I_C_ValidCombination.COLUMNNAME_AD_Org_ID).concat(" IN(0,").concat(AcctEditorDefaults.getOrg().toString()).concat(")");
+		//Esquema contable definido en el panel
+		sql_Where+=" AND v.".concat(I_C_ValidCombination.COLUMNNAME_C_AcctSchema_ID).concat("=").concat(AcctEditorDefaults.getAcctSchema().toString());
 		preparetable();
 		executeQuery();
 	}
@@ -181,7 +182,7 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		ColumnInfo[] s_layoutJournal = new ColumnInfo[]{
 				new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID), I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID, IDColumn.class, false, true, null),
          		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Value), MElementValue.COLUMNNAME_Value, String.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_C_BPartner_ID),  "v."+I_C_ValidCombination.COLUMNNAME_C_BPartner_ID, MBPartner.class, false, true, null)};
+        		new ColumnInfo(Msg.translate(Env.getCtx(), I_C_ValidCombination.COLUMNNAME_Combination),  I_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID, MAccount.class, false, true, null)};
 
 
 		elementstab.setModel(new DefaultTableModel());
@@ -224,8 +225,9 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		TableAccount act =AcctEditorJournal.getJournalTable();
 		int prow=act.getSelectedRow();
 		IDColumn c =(IDColumn) elementstab.getValueAt(row, ElementsTable.COLUMN_ID);
+		MAccount mc = new MAccount(Env.getCtx(),c.getRecord_ID(),null);
 		act.setValueAt(elementstab.getValueAt(row, ElementsTable.COLUMN_VALUE), prow, TableAccount.COLUMN_Value);
-		act.setValueAt(elementstab.getValueAt(row, ElementsTable.COLUMN_DESCRIPTION), prow, TableAccount.COLUMN_Name);
+		act.setValueAt(mc.getDescription(), prow, TableAccount.COLUMN_Name);
 		act.setValueAt(c.getRecord_ID(), prow, TableAccount.COLUMN_ValidCombination);
 
 	}
@@ -272,9 +274,8 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 			
 		}else if(arg0.getSource().equals(mZoomAccounts)){
 			//Visor de cuentas con los campos de búsqueda rellenos con los valores de la validcombination seleccionada
-			//AccountViewer view = new AccountViewer(); //Este es el visor de cuentas de un registro en concreto
 			//AcctViewer view = new AcctViewer(); //Este es el visor de cuentas mediante búsqueda de la aplicación
-			AcctViewer view = new AcctViewer(1000008,318,1013450);
+			
 		}
 		
 	}

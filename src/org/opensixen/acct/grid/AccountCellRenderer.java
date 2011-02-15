@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -63,12 +63,13 @@ package org.opensixen.acct.grid;
 import java.awt.Color;
 import java.awt.Component;
 
+import javax.swing.JComponent;
 import javax.swing.JTable;
 
 import org.adempiere.plaf.AdempierePLAF;
 import org.compiere.grid.ed.VCellRenderer;
 import org.compiere.model.GridField;
-import org.compiere.util.DisplayType;
+import org.opensixen.acct.utils.AcctEditorSwingUtils;
 
 /**
  * 
@@ -89,6 +90,7 @@ public class AccountCellRenderer extends VCellRenderer{
 	public AccountCellRenderer(int string) {
 		super(string);
 	}
+	
 
 
 	/**
@@ -102,7 +104,6 @@ public class AccountCellRenderer extends VCellRenderer{
 		Component c = null;
 			//	returns JLabel
 		c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			//c.setFont(AdempierePLAF.getFont_Field());
 		c.setFont(table.getFont());
 		
 
@@ -134,10 +135,19 @@ public class AccountCellRenderer extends VCellRenderer{
 		else
 			fg = Color.BLUE;		//	Blue
 		
-		//	Highlighted row
+		//Comprobamos si la celda esta definida como error
+		if(table instanceof TableAccount){
+			TableAccount t= (TableAccount)table;
+			if(row==t.getRowSelect() && column==t.getColumnSelect()){
+				if(c instanceof JComponent)
+					c =AcctEditorSwingUtils.setBorder((JComponent)c, true);
+				return c;
+			}
+			
+		}	
 		if (isSelected)
 		{
-		//	Windows is white on blue
+			//	Windows is white on blue
 			bg = table.getGridColor();
 			fg = table.getSelectionForeground();
 			if (hasFocus)
@@ -147,8 +157,7 @@ public class AccountCellRenderer extends VCellRenderer{
 		//  Set Color
 		c.setBackground(bg);
 		c.setForeground(fg);
-		//
-
+		
 		//  Format it
 		setValue(value);
 		return c;

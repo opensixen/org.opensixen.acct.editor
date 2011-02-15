@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -61,6 +61,8 @@
 package org.opensixen.acct.form;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -76,11 +78,13 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import org.compiere.grid.ed.VDate;
+import org.compiere.grid.ed.VLookup;
 import org.compiere.grid.ed.VNumber;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
@@ -89,6 +93,7 @@ import org.compiere.model.MElementValue;
 import org.compiere.model.MFactAcct;
 import org.compiere.model.X_C_ValidCombination;
 import org.compiere.model.X_Fact_Acct;
+import org.compiere.print.MPrintFont;
 import org.compiere.swing.CButton;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
@@ -98,6 +103,7 @@ import org.compiere.util.Msg;
 import org.opensixen.acct.grid.AccountString;
 import org.opensixen.acct.grid.TableAccount;
 import org.opensixen.acct.process.CreateJournal;
+import org.opensixen.acct.utils.AcctEditorSwingUtils;
 
 /**
  * 
@@ -181,6 +187,10 @@ public class AcctEditorJournal extends JPanel implements PropertyChangeListener,
 		
 	}
 	
+	/**
+	 * Setea los valores mínimos y máximos para las columnas
+	 */
+	
 	public void setColumnWith(){        
 		//Columna Valor de Cuenta ancho fijo
 	    TableColumn columnAcct = journaltab.getColumnModel().getColumn(TableAccount.COLUMN_Value) ;
@@ -256,16 +266,134 @@ public class AcctEditorJournal extends JPanel implements PropertyChangeListener,
 	@Override
 	public void propertyChange(PropertyChangeEvent arg0) {
 		//Cada vez que ocurran cambios en el panel recalculamos la suma debe, haber y diferencia 
+
 		//Suma Debe
 		fAmtDr.setValue(journaltab.getSumDr());
 		//Suma Haber
 		fAmtCr.setValue(journaltab.getSumCr());
 		//Diferencia
 		fDifference.setValue(((BigDecimal)fAmtDr.getValue()).subtract((BigDecimal)fAmtCr.getValue()));
+		
+		if(((BigDecimal)fDifference.getValue()).equals(BigDecimal.ZERO)){
+			fDifference.setForeground(Color.BLACK);
+			fDifference=(VNumber) AcctEditorSwingUtils.setBorder(fDifference, true,Color.BLACK);
+		}else{
+			fDifference.setForeground(Color.RED);
+			fDifference=(VNumber)AcctEditorSwingUtils.setBorder(fDifference, true);
+		}
 	}
 	
 	public BigDecimal getDifference(){
 		return (BigDecimal)fDifference.getValue();
+	}
+
+	/**
+	 * Checkea los valores necesarios para guardar un asiento
+	 * @return
+	 */
+	
+	private boolean checkvalues(){
+		//Verificamos los valores del panel defaults
+		if(!checkDefaults())
+			return false;
+		//Verificamos que el asiento cuadre
+		if(!checkDifference())
+			return false;
+		//Verificamos que todas las filas estén correctamente rellenadas
+		if(!checkRows())
+			return false;
+		//Verificamos que el apunte no sea 0
+		if(!checkSums()){
+			System.out.println("La suma de debe y la de haber da 0");
+			fAmtDr=(VNumber) AcctEditorSwingUtils.setBorder(fAmtDr, true);
+			fAmtCr=(VNumber) AcctEditorSwingUtils.setBorder(fAmtCr, true);
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Checkea que la suma del debe y el haber no sean 0 ambas
+	 * @return
+	 */
+	
+	private boolean checkSums() {
+		//Reseteamos los valores
+		fAmtDr=(VNumber) AcctEditorSwingUtils.removeBorder(fAmtDr);
+		fAmtCr=(VNumber) AcctEditorSwingUtils.removeBorder(fAmtCr);
+		System.out.println("Suma de debe="+(BigDecimal)fAmtDr.getValue());
+		System.out.println("Suma de haber="+(BigDecimal)fAmtCr.getValue());
+		if( ((BigDecimal)fAmtDr.getValue()).compareTo(BigDecimal.ZERO)==0 )
+			if(((BigDecimal)fAmtCr.getValue()).compareTo(BigDecimal.ZERO)==0)
+				return false;
+		//return !( ((BigDecimal)fAmtDr.getValue()).compareTo(BigDecimal.ZERO)==0 ) && ( ((BigDecimal)fAmtCr.getValue()).compareTo(BigDecimal.ZERO)==0 );
+		return true;
+	}
+
+
+	/**
+	 * Checkea que todas las filas con valores tengan una cuenta asignada
+	 * @return
+	 */
+
+	private boolean checkRows() {
+		
+		for(int row=0;row<journaltab.getRowCount();row++){
+			//Para cada celda reseteamos el borde de error antes de la recomprobación
+			journaltab.RemoveColorCell(journaltab.getColumn(TableAccount.COLUMN_Value),row);
+			if( (journaltab.getValueAt(row, TableAccount.COLUMN_AmtAcctDr)!=null) || 
+				(journaltab.getValueAt(row, TableAccount.COLUMN_AmtAcctCr)!=null) ||
+				(journaltab.getValueAt(row, TableAccount.COLUMN_Value)!=null) ||
+				(journaltab.getValueAt(row, TableAccount.COLUMN_Description)!=null)){
+				
+				if(journaltab.getValueAt(row, TableAccount.COLUMN_ValidCombination)==null){
+					//Component c=journaltab.getCellRenderer(row, TableAccount.COLUMN_Value).getTableCellRendererComponent(journaltab, null, false, false, row, TableAccount.COLUMN_Value);
+					journaltab.ColorCell(journaltab.getColumn(TableAccount.COLUMN_Value),row);
+
+					return false;	
+				}
+			}
+		}
+		return true;
+	}
+
+
+	/**
+	 * Checkea si el asiento está cuadrado
+	 * @return
+	 */
+	
+	private boolean checkDifference() {
+
+		return ((BigDecimal)fDifference.getValue()).compareTo(BigDecimal.ZERO)==0;
+	}
+
+
+	/**
+	 * Checkea valores por defecto
+	 * @return
+	 */
+	private boolean checkDefaults() {
+		if(AcctEditorDefaults.getAcctSchema()==null){
+			AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vAcctSchema,true);
+			return false;
+		}if(AcctEditorDefaults.getGLCategory()==null){
+			AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vglCategory,true);
+			return false;
+		}if(AcctEditorDefaults.getOrg()==null){
+			AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vOrg,true);
+			return false;
+		}if(AcctEditorDefaults.getCurrency()==null){
+			AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vCurrency,true);
+			return false;
+		}
+		//En otro caso reseteamos los border
+		AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vAcctSchema,false);
+		AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vglCategory,false);
+		AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vOrg,false);
+		AcctEditorSwingUtils.setBorder(AcctEditorDefaults.vCurrency,false);
+		
+		return true;
 	}
 
 
@@ -276,7 +404,11 @@ public class AcctEditorJournal extends JPanel implements PropertyChangeListener,
 			//Reseteamos el panel y ponemos el número inicial de filas
 			preparetable();
 			journaltab.setRowCount(10);
+			AcctEditorDefaults.setDateOnJournal();
 		}else if(arg0.getSource().equals(savejournal)){
+			//Checkeamos valores
+			if(!checkvalues())
+				return;
 			//Guardar asiento actual
 			new CreateJournal(journaltab); 
 		}else if(arg0.getSource().equals(saveasdefault)){
