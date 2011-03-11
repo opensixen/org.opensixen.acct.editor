@@ -73,6 +73,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
+
+import org.compiere.acct.AcctViewer;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
@@ -88,6 +90,7 @@ import org.compiere.util.Msg;
 import org.opensixen.acct.grid.ElementsTable;
 import org.opensixen.acct.grid.TableAccount;
 import org.opensixen.acct.utils.AcctEditorMouseAdapter;
+import org.opensixen.swing.AccountViewer;
 
 /**
  * 
@@ -275,7 +278,8 @@ public class AcctEditorSearch extends JPanel implements ActionListener{
 		}else if(arg0.getSource().equals(mZoomAccounts)){
 			//Visor de cuentas con los campos de búsqueda rellenos con los valores de la validcombination seleccionada
 			//AcctViewer view = new AcctViewer(); //Este es el visor de cuentas mediante búsqueda de la aplicación
-			
+			AccountViewer view = new AccountViewer();
+			view.setVisible(true);
 		}
 		
 	}

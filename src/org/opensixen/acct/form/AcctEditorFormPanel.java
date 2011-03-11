@@ -71,6 +71,7 @@ import java.beans.VetoableChangeListener;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
@@ -78,6 +79,8 @@ import javax.swing.event.TableModelListener;
 
 import org.compiere.apps.form.FormFrame;
 import org.compiere.apps.form.FormPanel;
+import org.compiere.model.MFactAcct;
+import org.compiere.util.Env;
 
 /**
  * 
@@ -131,6 +134,8 @@ public class AcctEditorFormPanel extends JPanel implements FormPanel,ActionListe
 	    m_frame    = frame;
 	    
 	    try {
+	    	UIManager.getLookAndFeelDefaults().put("ClassLoader", UIManager.getLookAndFeel().getClass().getClassLoader());
+	    	
 			jbInit();
 	    	frame.getContentPane().add( this,BorderLayout.CENTER );
 	    	frame.pack();
@@ -152,7 +157,10 @@ public class AcctEditorFormPanel extends JPanel implements FormPanel,ActionListe
 	    search= new AcctEditorSearch(this);
 	    split1.add(search, JSplitPane.RIGHT);
 	    //Panel de edicion de asientos
+	    //Prueba borrar!!!!!!!!!-----------------------------------------------------------------------
 	    journal = new AcctEditorJournal(this);
+	   // MFactAcct act = new MFactAcct(Env.getCtx(),2484115,null);
+	   // journal = new AcctEditorJournal(act.getJournalNo(),act.getAD_Org_ID(),act.getDateAcct());
 	    split1.add(journal, JSplitPane.LEFT);
 	    
 	    //Listener para el posicionamiento del divisor

@@ -72,6 +72,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 
 import javax.swing.BorderFactory;
@@ -89,8 +91,12 @@ import org.compiere.grid.ed.VNumber;
 import org.compiere.minigrid.ColumnInfo;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
+import org.compiere.model.I_C_ValidCombination;
+import org.compiere.model.MAccount;
 import org.compiere.model.MElementValue;
 import org.compiere.model.MFactAcct;
+import org.compiere.model.MJournal;
+import org.compiere.model.MJournalLine;
 import org.compiere.model.X_C_ValidCombination;
 import org.compiere.model.X_Fact_Acct;
 import org.compiere.print.MPrintFont;
@@ -98,11 +104,13 @@ import org.compiere.swing.CButton;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
 import org.compiere.swing.CTextField;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.opensixen.acct.grid.AccountString;
 import org.opensixen.acct.grid.TableAccount;
 import org.opensixen.acct.process.CreateJournal;
+import org.opensixen.acct.utils.AcctEditorJournalNo;
 import org.opensixen.acct.utils.AcctEditorSwingUtils;
 
 /**
@@ -132,17 +140,29 @@ public class AcctEditorJournal extends JPanel implements PropertyChangeListener,
 	private CButton savejournal;
 	private CButton saveasdefault;
 	
+	private static String m_sql;
+	public static AcctEditorJournalNo jn=null;
+	
 	public AcctEditorJournal(){
-		initComponents();
+		initComponents(false);
 	}
 
 
 	public AcctEditorJournal(AcctEditorFormPanel acctEditorFormPanel) {
-		initComponents();
+		initComponents(false);
 	}
 
+	/**
+	 * Constructor para edición de asientos ya creados
+	 * @param journalno
+	 */
+	public AcctEditorJournal(int journalno,int ad_org_id,Timestamp date){
+		jn = new AcctEditorJournalNo(journalno,ad_org_id,date);
+		initComponents(true);
+		
+	}
 
-	private void initComponents() {
+	private void initComponents(boolean execute) {
 		this.setLayout(new BorderLayout());
 		
 		paneltotals= new CPanel();
@@ -184,6 +204,8 @@ public class AcctEditorJournal extends JPanel implements PropertyChangeListener,
 		this.add(p2,BorderLayout.SOUTH);
 		preparetable();
 		journaltab.addPropertyChangeListener(this);
+		if(execute)
+			executeQuery();
 		
 	}
 	
@@ -236,28 +258,85 @@ public class AcctEditorJournal extends JPanel implements PropertyChangeListener,
 
 
 	protected void preparetable() {
-		
+		String s_sqlFrom=MFactAcct.Table_Name.concat(" f ");
+		s_sqlFrom+=" INNER JOIN ".concat(MElementValue.Table_Name).concat(" m ").concat(" ON ");
+		s_sqlFrom+=" f.".concat(MFactAcct.COLUMNNAME_Account_ID).concat("=").concat("m.").concat(MElementValue.COLUMNNAME_C_ElementValue_ID);
+
+		s_sqlFrom+=" INNER JOIN ".concat(MJournalLine.Table_Name).concat(" l ").concat(" ON ");
+		s_sqlFrom+=" f.".concat(MFactAcct.COLUMNNAME_Line_ID).concat("=").concat("l.").concat(MJournalLine.COLUMNNAME_GL_JournalLine_ID);
+		s_sqlFrom+=" AND f.".concat(MFactAcct.COLUMNNAME_AD_Table_ID).concat("=").concat(String.valueOf(MJournal.Table_ID));
+
 		ColumnInfo[] s_layoutJournal = new ColumnInfo[]{
         		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_JournalNo), MFactAcct.COLUMNNAME_JournalNo, String.class, true, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_DateTrx), MFactAcct.COLUMNNAME_DateAcct, Timestamp.class, true, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_DateTrx), "f.".concat(MFactAcct.COLUMNNAME_DateAcct), Timestamp.class, true, true, null),
         		//Columna especial, crear clase nueva para ella con buscador de elementos de cuenta según vamos escribiendo
         		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_Account_ID), MElementValue.COLUMNNAME_Value, AccountString.class, false, true, null),
         		new ColumnInfo(Msg.translate(Env.getCtx(), MElementValue.COLUMNNAME_Name), MElementValue.COLUMNNAME_Name, String.class, true, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "Concept"), MFactAcct.COLUMNNAME_Description, String.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctDr), MFactAcct.COLUMNNAME_AmtAcctDr,BigDecimal.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctCr), MFactAcct.COLUMNNAME_AmtAcctCr,BigDecimal.class, false, true, null),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), X_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID), X_C_ValidCombination.COLUMNNAME_C_ValidCombination_ID,Integer.class, false, true, null)};
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "Concept"), "f.".concat(MFactAcct.COLUMNNAME_Description), String.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctDr),"f.".concat(MFactAcct.COLUMNNAME_AmtAcctDr),BigDecimal.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MFactAcct.COLUMNNAME_AmtAcctCr), "f.".concat(MFactAcct.COLUMNNAME_AmtAcctCr),BigDecimal.class, false, true, null),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), MAccount.COLUMNNAME_C_ValidCombination_ID), MAccount.COLUMNNAME_C_ValidCombination_ID,Integer.class, false, true, null)};
 
 		//Reseteamos el modelo de tabla
 		journaltab.setModel(new DefaultTableModel());
 
 		journaltab.setRowHeight(RowHeight);
-		journaltab.prepareTable(s_layoutJournal, "", "", true, null);
+		
+		if(jn!=null){
+			m_sql =journaltab.prepareTable(s_layoutJournal, s_sqlFrom,getWhere(), false, null);
+		}else{
+			journaltab.prepareTable(s_layoutJournal, "", "", true, null);
+		}
 		//journaltab.autoSize();
 		journaltab.setAutoResizeMode(TableAccount.AUTO_RESIZE_ALL_COLUMNS);
 		setColumnWith();
 	}
 	
+	/**
+	 * Creamos la sentencia Where a partir de los datos de AcctEditorJournalNo
+	 * @return
+	 */
+	
+	private String getWhere() {
+		String where=null;
+		if(jn==null)
+			return where;
+		//Journal
+		where=" f.".concat(MFactAcct.COLUMNNAME_JournalNo).concat("=").concat(String.valueOf(jn.getJournalNo()));
+		//AD_Org
+		where+=" AND ".concat("f.").concat(MFactAcct.COLUMNNAME_AD_Org_ID).concat("=").concat(String.valueOf(jn.getAD_Org()));
+		//DateAcct
+		where+=" AND ".concat("f.").concat(MFactAcct.COLUMNNAME_DateAcct).concat("=").concat(DB.TO_DATE(jn.getDateAcct()));
+		
+		return where;
+	}
+
+	
+	private static void executeQuery(){
+
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try
+		{
+			System.out.println("SQL="+m_sql);
+			pstmt = DB.prepareStatement(m_sql, null);
+			rs = pstmt.executeQuery();
+			journaltab.loadTable(rs);
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			DB.close(rs, pstmt);
+			rs = null; pstmt = null;
+
+		}
+
+	}
+
 	protected static TableAccount getJournalTable(){
 		return journaltab;
 	}
